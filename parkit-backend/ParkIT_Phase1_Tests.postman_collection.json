@@ -1,0 +1,394 @@
+{
+  "info": {
+    "name": "ParkIT - Location-Based Parking Search (Phase 1)",
+    "description": "Testing endpoints for Phase 1 - Database schema setup + API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search Endpoints - Phase 1",
+      "item": [
+        {
+          "name": "1. Search Nearby Spaces - Basic",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/spaces/search/nearby?latitude=28.5355&longitude=77.2707&radius=5",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "spaces", "search", "nearby"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "28.5355",
+                  "description": "User's current latitude"
+                },
+                {
+                  "key": "longitude",
+                  "value": "77.2707",
+                  "description": "User's current longitude"
+                },
+                {
+                  "key": "radius",
+                  "value": "5",
+                  "description": "Search radius in km (1-20, default: 5)"
+                }
+              ]
+            },
+            "description": "Find parking spaces near user's current location"
+          }
+        },
+        {
+          "name": "1b. Search Nearby - With Filters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/spaces/search/nearby?latitude=28.5355&longitude=77.2707&radius=5&vehicle_type=car&sort_by=distance&limit=20&skip=0",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "spaces", "search", "nearby"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "28.5355"
+                },
+                {
+                  "key": "longitude",
+                  "value": "77.2707"
+                },
+                {
+                  "key": "radius",
+                  "value": "5"
+                },
+                {
+                  "key": "vehicle_type",
+                  "value": "car",
+                  "description": "Filter by vehicle type (car, bike, truck)"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "distance",
+                  "description": "Sort by: distance, rating, price, availability"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Results limit (default: 20, max: 50)"
+                },
+                {
+                  "key": "skip",
+                  "value": "0",
+                  "description": "Pagination offset"
+                }
+              ]
+            },
+            "description": "Find parking spaces with filters and sorting"
+          }
+        },
+        {
+          "name": "1c. Search Nearby - Sort by Rating",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/spaces/search/nearby?latitude=28.5355&longitude=77.2707&radius=5&sort_by=rating",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "spaces", "search", "nearby"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "28.5355"
+                },
+                {
+                  "key": "longitude",
+                  "value": "77.2707"
+                },
+                {
+                  "key": "radius",
+                  "value": "5"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "rating"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "1d. Search Nearby - Large Radius",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/spaces/search/nearby?latitude=28.5355&longitude=77.2707&radius=20",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "spaces", "search", "nearby"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "28.5355"
+                },
+                {
+                  "key": "longitude",
+                  "value": "77.2707"
+                },
+                {
+                  "key": "radius",
+                  "value": "20",
+                  "description": "Max radius is 20 km"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Search by Destination - Basic",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/spaces/search/destination?destination=Delhi%20Mall&radius=3",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "spaces", "search", "destination"],
+              "query": [
+                {
+                  "key": "destination",
+                  "value": "Delhi Mall",
+                  "description": "Destination address or landmark name"
+                },
+                {
+                  "key": "radius",
+                  "value": "3",
+                  "description": "Search radius in km (1-15, default: 3)"
+                }
+              ]
+            },
+            "description": "Find parking spaces near a destination address using geocoding"
+          }
+        },
+        {
+          "name": "2b. Search by Destination - With Filters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/spaces/search/destination?destination=Connaught%20Place&radius=5&vehicle_type=car&limit=20",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "spaces", "search", "destination"],
+              "query": [
+                {
+                  "key": "destination",
+                  "value": "Connaught Place"
+                },
+                {
+                  "key": "radius",
+                  "value": "5"
+                },
+                {
+                  "key": "vehicle_type",
+                  "value": "car"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Get Space Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/spaces/:id/details",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "spaces", ":id", "details"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Parking space UUID"
+                }
+              ]
+            },
+            "description": "Get detailed information about a specific parking space including reviews, amenities, and directions"
+          }
+        },
+        {
+          "name": "4. Get Trending Spaces - Week",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/spaces/trending?limit=10&period=week",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "spaces", "trending"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Results limit (default: 10, max: 50)"
+                },
+                {
+                  "key": "period",
+                  "value": "week",
+                  "description": "Time period: today, week, month"
+                }
+              ]
+            },
+            "description": "Get trending/popular parking spaces based on bookings and ratings"
+          }
+        },
+        {
+          "name": "4b. Get Trending Spaces - Month",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/spaces/trending?limit=10&period=month",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "spaces", "trending"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "period",
+                  "value": "month"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5. Get All Spaces (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/spaces?limit=20&skip=0&active=true",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "spaces"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Results limit"
+                },
+                {
+                  "key": "skip",
+                  "value": "0",
+                  "description": "Pagination offset"
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "description": "Filter by active status"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Test Data Generation",
+      "item": [
+        {
+          "name": "Notes - How to Test",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:5000",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000"
+            },
+            "description": "TESTING INSTRUCTIONS FOR PHASE 1:\n\n1. DATABASE SETUP:\n   - Ensure PostgreSQL is running\n   - Create database: createdb parkit_dev\n   - Enable PostGIS: psql -d parkit_dev -c \"CREATE EXTENSION IF NOT EXISTS postgis;\"\n   - Set environment variables in .env:\n     DB_NAME=parkit_dev\n     DB_USER=postgres\n     DB_PASSWORD=your_password\n     DB_HOST=localhost\n     DB_PORT=5432\n\n2. SERVER SETUP:\n   - Install dependencies: npm install\n   - Run migrations: npm run migrate (if available)\n   - Start server: npm start\n   - Server should be running on http://localhost:5000\n\n3. INSERT TEST DATA:\n   - You need to insert parking spaces into the database\n   - Use a database tool (pgAdmin, DBeaver) or SQL scripts\n   - Make sure spaces have latitude/longitude values\n   - Ensure location geometry is populated\n   - Set verification_status to 'verified'\n   - Set is_active to true\n   - Set available_slots > 0\n\n4. TEST ENDPOINTS:\n   - Start with \"Search Nearby Spaces - Basic\"\n   - Verify response includes distance_km and relevance_score\n   - Try different sort_by values (distance, rating, price, availability)\n   - Test destination search (requires GOOGLE_MAPS_API_KEY in .env)\n   - Get space details for an existing space ID\n   - Check trending spaces\n\n5. EXPECTED RESPONSE FORMAT:\n   {\n     \"success\": true,\n     \"data\": [...parking spaces...],\n     \"total\": 15,\n     \"limit\": 20,\n     \"skip\": 0,\n     \"timestamp\": \"2026-05-02T10:30:00Z\"\n   }\n\n6. TROUBLESHOOTING:\n   - If you get \"no results\", check:\n     * Parking spaces exist in database\n     * location geometry is populated\n     * is_active = true\n     * available_slots > 0\n     * verification_status = 'verified'\n   \n   - If geocoding fails:\n     * Check GOOGLE_MAPS_API_KEY is set\n     * Verify API key has Geocoding API enabled\n     * Use mock data (supported in test mode)\n\n   - Check server logs for detailed error messages"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sample Test Coordinates",
+      "item": [
+        {
+          "name": "Delhi Locations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:5000",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000"
+            },
+            "description": "SAMPLE TEST COORDINATES FOR DELHI:\n\nMall of India:\n- Latitude: 28.6692\n- Longitude: 77.1025\n- Use: ?latitude=28.6692&longitude=77.1025&radius=5\n\nConnaught Place:\n- Latitude: 28.6328\n- Longitude: 77.1897\n- Use: ?latitude=28.6328&longitude=77.1897&radius=5\n\nIndia Gate:\n- Latitude: 28.6129\n- Longitude: 77.1791\n- Use: ?latitude=28.6129&longitude=77.1791&radius=5\n\nDelhi Mall:\n- Latitude: 28.5921\n- Longitude: 77.1385\n- Use: ?latitude=28.5921&longitude=77.1385&radius=5\n\nNoida City Center:\n- Latitude: 28.5865\n- Longitude: 77.3619\n- Use: ?latitude=28.5865&longitude=77.3619&radius=10\n\nTesting nearby search: Use these coordinates with the search/nearby endpoint\nTesting destination search: Use location names like \"Delhi Mall\", \"Connaught Place\", \"India Gate\", etc."
+          }
+        }
+      ]
+    }
+  ]
+}
