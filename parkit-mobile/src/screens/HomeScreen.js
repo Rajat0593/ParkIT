@@ -18,6 +18,8 @@ import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { spaceService } from '../../services/api';
 import useLocationStore from '../../store/locationStore';
+import { rankSpaces } from '../../utils/ranking';
+import { cacheMiddleware } from '../../utils/cache';
 
 const { width, height } = Dimensions.get('window');
 
@@ -89,7 +91,8 @@ export default function HomeScreen({ navigation }) {
 
     try {
       setLocalError(null);
-      const results = await spaceService.getNearby({
+      
+      const searchParams = {
         latitude: userLocation.latitude,
         longitude: userLocation.longitude,
         radius: searchFilters.radius_km,
@@ -97,8 +100,25 @@ export default function HomeScreen({ navigation }) {
         sort_by: searchFilters.sort_by,
         limit: pagination.limit,
         skip: pagination.skip,
-      });
-      setNearbySpaces(results.data || []);
+      };
+
+      // Use cache middleware
+      const results = await cacheMiddleware(
+        searchParams,
+        () => spaceService.getNearby(searchParams),
+        { useCache: pagination.skip === 0 } // Only cache first page
+      );
+
+      // Apply ranking algorithm
+      let spaces = results.data || [];
+      if (pagination.skip === 0) {
+        spaces = rankSpaces(spaces, {
+          distanceKm: searchFilters.radius_km,
+          userVehicleType: searchFilters.vehicle_type,
+        });
+      }
+
+      setNearbySpaces(spaces);
     } catch (error) {
       console.error('Search error:', error);
       setLocalError(error.response?.data?.message || 'Search failed');
@@ -190,40 +210,66 @@ export default function HomeScreen({ navigation }) {
     setPagination({ skip: 0, limit: 20 });
     setLocalError(null);
   };
-    <Card style={styles.card} onPress={() => navigation.navigate('SpaceDetails', { spaceId: item.id })}>
-      <Card.Cover source={{ uri: item.images_url?.[0] || 'https://via.placeholder.com/400x200' }} />
+
+  const renderSpaceCard = ({ item }) => (
+    <Card
+      style={styles.card}
+      onPress={() => navigation.navigate('SpaceDetails', { spaceId: item._id || item.id })}
+    >
+      <Card.Cover
+        source={{ uri: item.images_url?.[0] || 'https://via.placeholder.com/400x200' }}
+      />
       <Card.Content>
         <Text style={styles.spaceName}>{item.name}</Text>
         <Text style={styles.spaceAddress} numberOfLines={2}>
           {item.address}
         </Text>
+
         <View style={styles.detailsRow}>
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Available</Text>
-            <Text style={styles.detailValue}>{item.available_slots}/{item.total_slots}</Text>
+            <Text style={styles.detailValue}>
+              {item.available_spots || item.available_slots}/{item.total_capacity || item.total_slots}
+            </Text>
           </View>
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Price</Text>
-            <Text style={styles.detailValue}>₹{item.price_per_day}/day</Text>
+            <Text style={styles.detailValue}>₹{item.price_per_day || item.price_per_hour * 24}/day</Text>
           </View>
-        </View>
-        <View style={styles.amenitiesRow}>
-          {item.amenities?.slice(0, 3).map((amenity, index) => (
-            <Chip key={index} style={styles.amenityChip} textStyle={styles.amenityText}>
-              {amenity}
-            </Chip>
-          ))}
-          {item.amenities?.length > 3 && (
-            <Chip style={styles.amenityChip} textStyle={styles.amenityText}>
-              +{item.amenities.length - 3} more
-            </Chip>
+          {item.distance_km && (
+            <View style={styles.detailItem}>
+              <Text style={styles.detailLabel}>Distance</Text>
+              <Text style={styles.detailValue}>{item.distance_km} km</Text>
+            </View>
           )}
         </View>
+
+        {item.amenities && item.amenities.length > 0 && (
+          <View style={styles.amenitiesRow}>
+            {item.amenities.slice(0, 3).map((amenity, index) => (
+              <Chip key={index} style={styles.amenityChip} textStyle={styles.amenityText}>
+                {amenity}
+              </Chip>
+            ))}
+            {item.amenities.length > 3 && (
+              <Chip style={styles.amenityChip} textStyle={styles.amenityText}>
+                +{item.amenities.length - 3} more
+              </Chip>
+            )}
+          </View>
+        )}
+
+        {item.relevance_score && (
+          <Text style={styles.relevanceScore}>
+            ✓ Match Score: {item.relevance_score}/100
+          </Text>
+        )}
       </Card.Content>
+
       <Card.Actions>
         <TouchableOpacity
           style={styles.bookButton}
-          onPress={() => navigation.navigate('Booking', { spaceId: item.id })}
+          onPress={() => navigation.navigate('Booking', { spaceId: item._id || item.id })}
         >
           <Text style={styles.bookButtonText}>Book Now</Text>
         </TouchableOpacity>
