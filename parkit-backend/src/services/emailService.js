@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 const config = require('../config/environment');
-const logger = require('./logger');
+const logger = require('../utils/logger');
 
 // Create email transporter
 const transporter = nodemailer.createTransport({
