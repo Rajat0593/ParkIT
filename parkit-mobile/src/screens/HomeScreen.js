@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,59 +7,189 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Modal,
+  Slider,
+  ScrollView,
+  Alert,
+  Dimensions,
 } from 'react-native';
-import { Searchbar, Card, Chip, IconButton } from 'react-native-paper';
+import { Searchbar, Card, Chip, IconButton, SegmentedButtons, Button } from 'react-native-paper';
 import MapView, { Marker } from 'react-native-maps';
+import * as Location from 'expo-location';
 import { spaceService } from '../../services/api';
+import useLocationStore from '../../store/locationStore';
+
+const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [spaces, setSpaces] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Location & Search State
+  const {
+    userLocation,
+    searchMode,
+    selectedDestination,
+    searchFilters,
+    nearbySpaces,
+    isLoading,
+    error,
+    setUserLocation,
+    setSearchMode,
+    setSelectedDestination,
+    setSearchFilters,
+    setNearbySpaces,
+  } = useLocationStore();
+
+  // Local State
   const [refreshing, setRefreshing] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-  const [selectedFilters, setSelectedFilters] = useState({
-    vehicleType: 'all',
-    priceRange: 'all',
-  });
+  const [pagination, setPagination] = useState({ skip: 0, limit: 20 });
+  const [localError, setLocalError] = useState(null);
+  const [destinationSuggestions, setDestinationSuggestions] = useState([]);
+  const [destinationInput, setDestinationInput] = useState('');
+  const [showAutoComplete, setShowAutoComplete] = useState(false);
+  const autoCompleteTimeoutRef = useRef(null);
 
+  // Initialize location on mount
   useEffect(() => {
-    loadSpaces();
+    initializeLocation();
   }, []);
 
-  const loadSpaces = async () => {
+  // Search when location or filters change
+  useEffect(() => {
+    if (searchMode === 'current_location' && userLocation) {
+      searchNearby();
+    }
+  }, [searchMode, userLocation, searchFilters]);
+
+  const initializeLocation = async () => {
     try {
-      setLoading(true);
-      const data = await spaceService.getAll();
-      setSpaces(data);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Location permission is required to find nearby spaces');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      setUserLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        accuracy: location.coords.accuracy,
+        lastUpdated: new Date(),
+      });
     } catch (error) {
-      console.error('Error loading spaces:', error);
-    } finally {
-      setLoading(false);
+      console.error('Location error:', error);
+      setLocalError('Failed to get location');
+    }
+  };
+
+  const searchNearby = async () => {
+    if (!userLocation) return;
+
+    try {
+      setLocalError(null);
+      const results = await spaceService.getNearby({
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        radius: searchFilters.radius_km,
+        vehicle_type: searchFilters.vehicle_type === 'all' ? null : searchFilters.vehicle_type,
+        sort_by: searchFilters.sort_by,
+        limit: pagination.limit,
+        skip: pagination.skip,
+      });
+      setNearbySpaces(results.data || []);
+    } catch (error) {
+      console.error('Search error:', error);
+      setLocalError(error.response?.data?.message || 'Search failed');
+    }
+  };
+
+  const searchByDestination = async () => {
+    if (!destinationInput.trim()) {
+      setLocalError('Please enter a destination');
+      return;
+    }
+
+    try {
+      setLocalError(null);
+      const results = await spaceService.searchByDestination({
+        destination: destinationInput,
+        radius: searchFilters.radius_km,
+        vehicle_type: searchFilters.vehicle_type === 'all' ? null : searchFilters.vehicle_type,
+        limit: pagination.limit,
+        skip: pagination.skip,
+      });
+      setNearbySpaces(results.data || []);
+      setSelectedDestination({
+        address: destinationInput,
+        latitude: results.destination?.latitude,
+        longitude: results.destination?.longitude,
+      });
+      setShowAutoComplete(false);
+    } catch (error) {
+      console.error('Search error:', error);
+      setLocalError(error.response?.data?.message || 'Search failed');
+    }
+  };
+
+  const handleDestinationChange = (text) => {
+    setDestinationInput(text);
+
+    // Clear previous timeout
+    if (autoCompleteTimeoutRef.current) {
+      clearTimeout(autoCompleteTimeoutRef.current);
+    }
+
+    if (text.length > 2) {
+      // Debounce autocomplete suggestions
+      autoCompleteTimeoutRef.current = setTimeout(async () => {
+        try {
+          // Mock autocomplete - in production, use actual API
+          const suggestions = [
+            'Delhi Mall',
+            'Connaught Place',
+            'India Gate',
+            'Mall of India',
+            'Noida City Center',
+          ].filter(s => s.toLowerCase().includes(text.toLowerCase()));
+          setDestinationSuggestions(suggestions);
+          setShowAutoComplete(true);
+        } catch (error) {
+          console.error('Autocomplete error:', error);
+        }
+      }, 300);
+    } else {
+      setDestinationSuggestions([]);
+      setShowAutoComplete(false);
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadSpaces();
+    setPagination({ skip: 0, limit: 20 });
+    if (searchMode === 'current_location') {
+      await searchNearby();
+    } else if (selectedDestination) {
+      await searchByDestination();
+    }
     setRefreshing(false);
   };
 
-  const handleSearch = async (query) => {
-    setSearchQuery(query);
-    if (query.trim()) {
-      try {
-        const results = await spaceService.search(query);
-        setSpaces(results);
-      } catch (error) {
-        console.error('Search error:', error);
-      }
+  const loadMoreSpaces = () => {
+    setPagination(prev => ({ ...prev, skip: prev.skip + prev.limit }));
+    if (searchMode === 'current_location') {
+      searchNearby();
     } else {
-      loadSpaces();
+      searchByDestination();
     }
   };
 
-  const renderSpaceCard = ({ item }) => (
+  const handleModeChange = (mode) => {
+    setSearchMode(mode);
+    setPagination({ skip: 0, limit: 20 });
+    setLocalError(null);
+  };
     <Card style={styles.card} onPress={() => navigation.navigate('SpaceDetails', { spaceId: item.id })}>
       <Card.Cover source={{ uri: item.images_url?.[0] || 'https://via.placeholder.com/400x200' }} />
       <Card.Content>
@@ -101,7 +231,7 @@ export default function HomeScreen({ navigation }) {
     </Card>
   );
 
-  if (loading) {
+  if (isLoading && pagination.skip === 0) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#4A90E2" />
@@ -111,54 +241,194 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <Searchbar
-          placeholder="Search parking spaces..."
-          onChangeText={handleSearch}
-          value={searchQuery}
-          style={styles.searchbar}
-          iconColor="#4A90E2"
+      {/* Search Mode Toggle */}
+      <View style={styles.modeContainer}>
+        <SegmentedButtons
+          value={searchMode}
+          onValueChange={handleModeChange}
+          buttons={[
+            {
+              value: 'current_location',
+              label: 'Current Location',
+              icon: 'map-marker',
+            },
+            {
+              value: 'destination',
+              label: 'Destination',
+              icon: 'map-search',
+            },
+          ]}
+          style={styles.modeButtons}
         />
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => setFilterVisible(!filterVisible)}
-        >
-          <IconButton icon="filter-variant" size={24} color="#4A90E2" />
-        </TouchableOpacity>
       </View>
 
-      {filterVisible && (
-        <View style={styles.filterContainer}>
-          <Text style={styles.filterTitle}>Vehicle Type:</Text>
-          <View style={styles.filterChips}>
-            {['all', 'car', 'bike', 'truck'].map((type) => (
-              <Chip
-                key={type}
-                selected={selectedFilters.vehicleType === type}
-                onPress={() =>
-                  setSelectedFilters({ ...selectedFilters, vehicleType: type })
-                }
-                style={styles.filterChip}
+      {/* Search Input */}
+      {searchMode === 'current_location' ? (
+        <View style={styles.searchContainer}>
+          <Searchbar
+            placeholder="Current location search..."
+            editable={false}
+            value={userLocation ? `${userLocation.latitude.toFixed(4)}, ${userLocation.longitude.toFixed(4)}` : 'Getting location...'}
+            style={styles.searchbar}
+            icon="map-marker"
+            iconColor="#4A90E2"
+          />
+          <TouchableOpacity
+            style={styles.filterButton}
+            onPress={() => setFilterVisible(!filterVisible)}
+          >
+            <IconButton icon="filter-variant" size={24} color="#4A90E2" />
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={styles.searchContainer}>
+          <View style={styles.destinationSearchContainer}>
+            <Searchbar
+              placeholder="Enter destination (mall, landmark)..."
+              onChangeText={handleDestinationChange}
+              value={destinationInput}
+              style={styles.searchbar}
+              icon="map-search"
+              iconColor="#4A90E2"
+              onSubmitEditing={searchByDestination}
+            />
+            {destinationInput && (
+              <TouchableOpacity
+                onPress={() => setDestinationInput('')}
+                style={styles.clearButton}
               >
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </Chip>
-            ))}
+                <IconButton icon="close" size={20} color="#999" />
+              </TouchableOpacity>
+            )}
           </View>
+          
+          {/* Autocomplete Suggestions */}
+          {showAutoComplete && destinationSuggestions.length > 0 && (
+            <View style={styles.autoCompleteContainer}>
+              {destinationSuggestions.map((suggestion) => (
+                <TouchableOpacity
+                  key={suggestion}
+                  style={styles.suggestionItem}
+                  onPress={() => {
+                    setDestinationInput(suggestion);
+                    setShowAutoComplete(false);
+                  }}
+                >
+                  <IconButton icon="map-marker" size={18} color="#999" />
+                  <Text style={styles.suggestionText}>{suggestion}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={styles.filterButton}
+            onPress={() => setFilterVisible(!filterVisible)}
+          >
+            <IconButton icon="filter-variant" size={24} color="#4A90E2" />
+          </TouchableOpacity>
         </View>
       )}
 
+      {/* Filters */}
+      {filterVisible && (
+        <ScrollView style={styles.filterContainer}>
+          <View style={styles.filterSection}>
+            <Text style={styles.filterTitle}>Radius: {searchFilters.radius_km} km</Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={1}
+              maximumValue={searchMode === 'current_location' ? 20 : 15}
+              step={1}
+              value={searchFilters.radius_km}
+              onValueChange={(value) =>
+                setSearchFilters({ ...searchFilters, radius_km: value })
+              }
+            />
+          </View>
+
+          <View style={styles.filterSection}>
+            <Text style={styles.filterTitle}>Vehicle Type</Text>
+            <View style={styles.filterChips}>
+              {['all', 'car', 'bike', 'truck'].map((type) => (
+                <Chip
+                  key={type}
+                  selected={searchFilters.vehicle_type === type}
+                  onPress={() =>
+                    setSearchFilters({ ...searchFilters, vehicle_type: type })
+                  }
+                  style={styles.filterChip}
+                >
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </Chip>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.filterSection}>
+            <Text style={styles.filterTitle}>Sort By</Text>
+            <View style={styles.filterChips}>
+              {['distance', 'rating', 'price', 'availability'].map((sort) => (
+                <Chip
+                  key={sort}
+                  selected={searchFilters.sort_by === sort}
+                  onPress={() =>
+                    setSearchFilters({ ...searchFilters, sort_by: sort })
+                  }
+                  style={styles.filterChip}
+                >
+                  {sort.charAt(0).toUpperCase() + sort.slice(1)}
+                </Chip>
+              ))}
+            </View>
+          </View>
+
+          <Button
+            mode="contained"
+            onPress={() => {
+              setFilterVisible(false);
+              searchMode === 'current_location' ? searchNearby() : searchByDestination();
+            }}
+            style={styles.applyButton}
+          >
+            Apply Filters
+          </Button>
+        </ScrollView>
+      )}
+
+      {/* Error Display */}
+      {(error || localError) && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error || localError}</Text>
+        </View>
+      )}
+
+      {/* Results List */}
       <FlatList
-        data={spaces}
+        data={nearbySpaces}
         renderItem={renderSpaceCard}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id || item.id}
         contentContainerStyle={styles.listContainer}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        onEndReached={loadMoreSpaces}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          isLoading && pagination.skip > 0 ? (
+            <ActivityIndicator size="small" color="#4A90E2" style={styles.loadingFooter} />
+          ) : null
+        }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No parking spaces found</Text>
-          </View>
+          !isLoading ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                {searchMode === 'current_location'
+                  ? 'No parking spaces nearby'
+                  : 'Enter a destination to search'}
+              </Text>
+            </View>
+          ) : null
         }
       />
     </View>
@@ -175,15 +445,60 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  modeContainer: {
+    backgroundColor: '#fff',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  modeButtons: {
+    width: '100%',
+  },
   searchContainer: {
     flexDirection: 'row',
     padding: 10,
     backgroundColor: '#fff',
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  destinationSearchContainer: {
+    flex: 1,
+    position: 'relative',
   },
   searchbar: {
     flex: 1,
     elevation: 2,
+  },
+  clearButton: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  autoCompleteContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 10,
+    right: 50,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    elevation: 5,
+    maxHeight: 200,
+    zIndex: 1000,
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  suggestionText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#333',
+    marginLeft: -8,
   },
   filterButton: {
     marginLeft: 10,
@@ -195,11 +510,15 @@ const styles = StyleSheet.create({
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+    maxHeight: 350,
+  },
+  filterSection: {
+    marginBottom: 20,
   },
   filterTitle: {
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: 10,
+    marginBottom: 12,
     color: '#333',
   },
   filterChips: {
@@ -209,6 +528,29 @@ const styles = StyleSheet.create({
   },
   filterChip: {
     marginRight: 8,
+    marginBottom: 8,
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  applyButton: {
+    marginTop: 10,
+    backgroundColor: '#4A90E2',
+    borderRadius: 8,
+  },
+  errorContainer: {
+    backgroundColor: '#FFEBEE',
+    padding: 12,
+    marginHorizontal: 10,
+    marginTop: 10,
+    borderRadius: 6,
+    borderLeftWidth: 4,
+    borderLeftColor: '#F44336',
+  },
+  errorText: {
+    color: '#C62828',
+    fontSize: 13,
   },
   listContainer: {
     padding: 10,
@@ -259,6 +601,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#4A90E2',
   },
+  relevanceScore: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FF9800',
+    marginTop: 8,
+  },
   bookButton: {
     backgroundColor: '#4A90E2',
     paddingHorizontal: 20,
@@ -278,5 +626,8 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: '#999',
+  },
+  loadingFooter: {
+    paddingVertical: 20,
   },
 });

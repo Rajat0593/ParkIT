@@ -100,7 +100,22 @@ export const spaceService = {
   },
 
   getById: async (id) => {
-    const response = await api.get(`/spaces/${id}`);
+    const response = await api.get(`/spaces/${id}/details`);
+    return response.data;
+  },
+
+  getNearby: async (params) => {
+    const response = await api.get('/spaces/search/nearby', { params });
+    return response.data;
+  },
+
+  searchByDestination: async (params) => {
+    const response = await api.get('/spaces/search/destination', { params });
+    return response.data;
+  },
+
+  getTrending: async (params = {}) => {
+    const response = await api.get('/spaces/trending', { params });
     return response.data;
   },
 
