@@ -39,7 +39,8 @@ class Logger {
     const logEntry = JSON.stringify(logMessage);
 
     // Console output
-    const consoleOutput = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
+    const metaSuffix = meta && Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+    const consoleOutput = `[${timestamp}] ${level.toUpperCase()}: ${message}${metaSuffix}`;
     console[level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'log'](consoleOutput);
 
     // File output

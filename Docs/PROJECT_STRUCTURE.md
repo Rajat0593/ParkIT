@@ -10,14 +10,18 @@
 ```
 ParkIT/
 │
-├── 📄 IMPLEMENTATION_PLAN.md              ✅ Updated with frontend completion
-├── 📄 BACKEND_IMPLEMENTATION_SUMMARY.md   ✅ Backend complete
-├── 📄 BACKEND_SETUP_GUIDE.md             ✅ Backend setup instructions
-├── 📄 FRONTEND_SETUP_GUIDE.md            ✅ Frontend setup instructions
-├── 📄 FRONTEND_IMPLEMENTATION_SUMMARY.md  ✅ NEW - Frontend summary
-├── 📄 PROJECT_STRUCTURE.md               ✅ This file
-├── 📄 README.md
-├── 📄 WEEK_1_IMPLEMENTATION_GUIDE.md
+├── Docs/
+│   ├── README.md                         (docs entrypoint)
+│   ├── DOCUMENTATION_INDEX.md            (docs navigation)
+│   ├── QUICK_REFERENCE.md                (run everything quickly)
+│   ├── FRONTEND_SETUP_GUIDE.md           (frontend setup)
+│   ├── BACKEND_SETUP_GUIDE.md            (backend setup)
+│   ├── IMPLEMENTATION_SUMMARY.md         (what was implemented)
+│   ├── IMPLEMENTATION_PLAN.md            (roadmap / next work)
+│   ├── IMPLEMENTATION_NOTES.md           (notes)
+│   ├── PROJECT_STRUCTURE.md              (this file)
+│   ├── PHASE_7_TESTING_GUIDE.md          (testing)
+│   └── DEPLOYMENT_OPERATIONS_GUIDE.md    (ops)
 │
 │
 ├── 🔧 parkit-backend/                    ✅ BACKEND (Complete)
@@ -315,10 +319,9 @@ npm run dev
 | Document | Location | Status |
 |----------|----------|--------|
 | Backend Setup | `/BACKEND_SETUP_GUIDE.md` | ✅ |
-| Backend Summary | `/BACKEND_IMPLEMENTATION_SUMMARY.md` | ✅ |
 | Frontend Setup | `/FRONTEND_SETUP_GUIDE.md` | ✅ |
-| Frontend Summary | `/FRONTEND_IMPLEMENTATION_SUMMARY.md` | ✅ |
-| Implementation Plan | `/IMPLEMENTATION_PLAN.md` | ✅ Updated |
+| Implementation Summary | `/IMPLEMENTATION_SUMMARY.md` | ✅ |
+| Implementation Plan | `/IMPLEMENTATION_PLAN.md` | ✅ |
 | Mobile App README | `/parkit-mobile/README.md` | ✅ |
 | Admin Dashboard README | `/parkit-admin-web/README.md` | ✅ |
 | Backend README | `/parkit-backend/README.md` | ✅ |

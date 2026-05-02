@@ -24,10 +24,21 @@ const sequelize = new Sequelize({
 // Test database connection
 const testConnection = async () => {
   try {
+    const required = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
+    const missing = required.filter((k) => !process.env[k]);
+    if (missing.length) {
+      throw new Error(`Missing required env vars for database connection: ${missing.join(', ')}`);
+    }
+
     await sequelize.authenticate();
     logger.info('Database connection established successfully');
   } catch (error) {
-    logger.error('Unable to connect to database:', error);
+    logger.error('Unable to connect to database', {
+      name: error.name,
+      message: error.message,
+      original: error.original?.message,
+      code: error.original?.code
+    });
     throw error;
   }
 };

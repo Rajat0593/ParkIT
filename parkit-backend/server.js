@@ -6,8 +6,9 @@ const logger = require('./src/utils/logger');
 const { testConnection } = require('./src/config/database');
 const { initializeDatabase } = require('./src/database/init');
 const { verifyConnection: verifyEmailConnection } = require('./src/services/emailService');
+const config = require('./src/config/environment');
 
-const PORT = process.env.PORT || 5000;
+const PORT = config.PORT || 5000;
 
 let server;
 
@@ -29,10 +30,10 @@ const startServer = async () => {
     server = app.listen(PORT, () => {
       logger.info('═══════════════════════════════════════════════════════════');
       logger.info(`🚀 ParkIT API Server Started Successfully`);
-      logger.info(`📍 Environment: ${process.env.NODE_ENV}`);
+      logger.info(`📍 Environment: ${config.NODE_ENV}`);
       logger.info(`🔌 Port: ${PORT}`);
-      logger.info(`🌐 URL: ${process.env.API_BASE_URL}`);
-      logger.info(`📚 API Docs: ${process.env.API_BASE_URL}/api/v1/docs (coming soon)`);
+      logger.info(`🌐 URL: ${config.API_BASE_URL}`);
+      logger.info(`📚 API Docs: ${config.API_BASE_URL}/api/v1/docs (coming soon)`);
       logger.info('═══════════════════════════════════════════════════════════');
     });
 
@@ -60,7 +61,7 @@ const startServer = async () => {
     });
 
   } catch (error) {
-    logger.error('Failed to start server:', error);
+    logger.error('Failed to start server', { error: error.message, stack: error.stack });
     process.exit(1);
   }
 };

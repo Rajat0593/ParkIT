@@ -269,11 +269,13 @@ npm run dev -- --port 3001
 
 | File | Purpose |
 |------|---------|
-| README.md | Main project overview |
-| FRONTEND_SETUP_GUIDE.md | How to run all projects |
-| FRONTEND_COMPLETE.md | Feature summary |
-| PROJECT_STRUCTURE.md | Complete directory structure |
-| IMPLEMENTATION_PLAN.md | Overall roadmap |
+| Docs/README.md | Canonical docs entrypoint |
+| QUICK_REFERENCE.md | Run everything quickly |
+| FRONTEND_SETUP_GUIDE.md | Frontend setup |
+| BACKEND_SETUP_GUIDE.md | Backend setup |
+| IMPLEMENTATION_SUMMARY.md | What was implemented |
+| IMPLEMENTATION_PLAN.md | Roadmap / next work |
+| PROJECT_STRUCTURE.md | Repo structure |
 | parkit-mobile/README.md | Mobile app details |
 | parkit-admin-web/README.md | Admin dashboard details |
 | parkit-backend/README.md | Backend details |
