@@ -13,8 +13,8 @@ import {
 import { Card, Button, IconButton, Chip } from 'react-native-paper';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { spaceService } from '../../services/api';
-import useLocationStore from '../../store/locationStore';
+import { spaceService } from '../services/api';
+import useLocationStore from '../store/locationStore';
 
 export default function SpaceDetailsScreen({ navigation, route }) {
   const { spaceId } = route.params;

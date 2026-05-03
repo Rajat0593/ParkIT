@@ -119,10 +119,29 @@ const ParkingSpace = sequelize.define('ParkingSpace', {
     },
     {
       // PostGIS spatial index for efficient geospatial queries
-      fields: sequelize.where(sequelize.fn('ST_GeomFromText', sequelize.col('location')), 'WITH', 4326),
-      name: 'idx_location_spatial'
+      fields: ['location'],
+      name: 'idx_location_spatial',
+      type: 'GIST'
     }
-  ]
+  ],
+  hooks: {
+    beforeCreate: (space) => {
+      if (space.latitude && space.longitude) {
+        space.location = {
+          type: 'Point',
+          coordinates: [parseFloat(space.longitude), parseFloat(space.latitude)]
+        };
+      }
+    },
+    beforeUpdate: (space) => {
+      if (space.changed('latitude') || space.changed('longitude')) {
+        space.location = {
+          type: 'Point',
+          coordinates: [parseFloat(space.longitude), parseFloat(space.latitude)]
+        };
+      }
+    }
+  }
 });
 
 module.exports = ParkingSpace;

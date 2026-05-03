@@ -16,10 +16,10 @@ import {
 import { Searchbar, Card, Chip, IconButton, SegmentedButtons, Button } from 'react-native-paper';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { spaceService } from '../../services/api';
-import useLocationStore from '../../store/locationStore';
-import { rankSpaces } from '../../utils/ranking';
-import { cacheMiddleware } from '../../utils/cache';
+import { spaceService } from '../services/api';
+import useLocationStore from '../store/locationStore';
+import { rankSpaces } from '../utils/ranking';
+import { cacheMiddleware } from '../utils/cache';
 
 const { width, height } = Dimensions.get('window');
 

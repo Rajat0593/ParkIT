@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { TextInput, Button, HelperText } from 'react-native-paper';
-import useAuthStore from '../../store/authStore';
+import useAuthStore from '../store/authStore';
 
 export default function OTPVerificationScreen({ navigation, route }) {
   const [otp, setOtp] = useState('');

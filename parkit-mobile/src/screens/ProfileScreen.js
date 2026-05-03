@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import { Card, Button, TextInput, Avatar } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
-import useAuthStore from '../../store/authStore';
-import { userService } from '../../services/api';
+import useAuthStore from '../store/authStore';
+import { userService } from '../services/api';
 
 export default function ProfileScreen({ navigation }) {
   const { user, logout, updateUser, loadUser } = useAuthStore();

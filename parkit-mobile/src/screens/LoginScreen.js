@@ -7,14 +7,13 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
 } from 'react-native';
 import { TextInput, Button, HelperText } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import useAuthStore from '../../store/authStore';
+import useAuthStore from '../store/authStore';
 
 const loginSchema = yup.object({
   email: yup.string().email('Invalid email').required('Email is required'),
@@ -53,11 +52,9 @@ export default function LoginScreen({ navigation }) {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Image
-            source={require('../../../assets/icon.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
+          <View style={styles.logo}>
+            <Text style={styles.logoText}>🅿️</Text>
+          </View>
           <Text style={styles.title}>Welcome to ParkIT</Text>
           <Text style={styles.subtitle}>Find your perfect parking spot</Text>
         </View>
@@ -111,13 +108,6 @@ export default function LoginScreen({ navigation }) {
 
           {error && <HelperText type="error">{error}</HelperText>}
 
-          <TouchableOpacity
-            style={styles.forgotPassword}
-            onPress={() => navigation.navigate('ForgotPassword')}
-          >
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </TouchableOpacity>
-
           <Button
             mode="contained"
             onPress={handleSubmit(onLogin)}
@@ -158,6 +148,11 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     marginBottom: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoText: {
+    fontSize: 64,
   },
   title: {
     fontSize: 28,
@@ -176,18 +171,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     backgroundColor: '#fff',
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: 20,
-  },
-  forgotPasswordText: {
-    color: '#4A90E2',
-    fontSize: 14,
-  },
   button: {
     backgroundColor: '#4A90E2',
     borderRadius: 8,
     marginBottom: 16,
+    marginTop: 20,
   },
   buttonContent: {
     paddingVertical: 12,

@@ -11,7 +11,7 @@ import {
 import { Card, Button, TextInput, Chip } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import MapView, { Marker } from 'react-native-maps';
-import { spaceService, bookingService, vehicleService } from '../../services/api';
+import { spaceService, bookingService, vehicleService } from '../services/api';
 import { format } from 'date-fns';
 
 export default function BookingScreen({ navigation, route }) {
