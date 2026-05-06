@@ -92,7 +92,7 @@ exports.searchNearby = async (req, res) => {
           )::numeric,
           1
         ) AS relevance_score
-      FROM "ParkingSpaces"
+      FROM "parking_spaces"
       WHERE 
         is_active = true 
         AND available_slots > 0
@@ -109,7 +109,7 @@ exports.searchNearby = async (req, res) => {
 
     const countQuery = `
       SELECT COUNT(*) as total
-      FROM "ParkingSpaces"
+      FROM "parking_spaces"
       WHERE 
         is_active = true 
         AND available_slots > 0
@@ -246,7 +246,7 @@ exports.searchByDestination = async (req, res) => {
           )::numeric,
           1
         ) AS relevance_score
-      FROM "ParkingSpaces"
+      FROM "parking_spaces"
       WHERE 
         is_active = true 
         AND available_slots > 0
@@ -263,7 +263,7 @@ exports.searchByDestination = async (req, res) => {
 
     const countQuery = `
       SELECT COUNT(*) as total
-      FROM "ParkingSpaces"
+      FROM "parking_spaces"
       WHERE 
         is_active = true 
         AND available_slots > 0
@@ -453,7 +453,7 @@ exports.getTrendingSpaces = async (req, res) => {
         ps.is_active,
         COUNT(b.id) as bookings_count,
         COALESCE(AVG(b.rating), ps.rating) as average_rating
-      FROM "ParkingSpaces" ps
+      FROM "parking_spaces" ps
       LEFT JOIN "Bookings" b ON ps.id = b."spaceId" ${dateFilter}
       WHERE ps.is_active = true
       GROUP BY ps.id
@@ -474,7 +474,7 @@ exports.getTrendingSpaces = async (req, res) => {
         verification_status,
         is_active,
         0 as bookings_count
-      FROM "ParkingSpaces"
+      FROM "parking_spaces"
       WHERE is_active = true
       ORDER BY rating DESC
       LIMIT ${resultLimit}

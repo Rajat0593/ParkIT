@@ -121,9 +121,9 @@ const verifyOTP = async (otpId, otp, registrationData) => {
       email: registrationData.email,
       phone: registrationData.phone,
       password_hash: registrationData.password,
-      first_name: registrationData.firstName,
-      last_name: registrationData.lastName,
-      user_type: registrationData.userType
+      first_name: registrationData.first_name,
+      last_name: registrationData.last_name,
+      user_type: registrationData.user_type
     });
 
     // Delete OTP after successful verification

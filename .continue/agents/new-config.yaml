@@ -1,0 +1,34 @@
+name: SWE Autonomous Loop System
+version: 1.0.0
+schema: v1
+
+models:
+
+  # 🧠 PLANNER (SYSTEM DESIGN + REASONING)
+  - name: SWE Planner Brain
+    provider: ollama
+    model: llama3.1:8b
+    roles:
+      - chat
+
+  # 🤖 EXECUTOR (THE WORKER THAT MODIFIES CODE)
+  - name: SWE Executor
+    provider: ollama
+    model: qwen2.5-coder:7b
+    roles:
+      - edit
+      - apply
+
+  # ⚡ INLINE COPILOT (FAST COMPLETIONS ONLY)
+  - name: Copilot Inline Engine
+    provider: ollama
+    model: qwen2.5-coder:1.5b
+    roles:
+      - autocomplete
+
+  # 🔍 CODEBASE MEMORY
+  - name: Repo Intelligence
+    provider: ollama
+    model: nomic-embed-text:latest
+    roles:
+      - embed

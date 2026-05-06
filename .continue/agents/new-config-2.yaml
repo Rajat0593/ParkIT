@@ -1,0 +1,34 @@
+name: Copilot++ Ultra Speculative Mode
+version: 1.0.0
+schema: v1
+
+models:
+
+  # 🧠 PLANNER (COLD)
+  - name: Planner Brain
+    provider: ollama
+    model: llama3.1:8b
+    roles:
+      - chat
+
+  # 🤖 EXECUTOR (COLD / ON-DEMAND)
+  - name: Code Executor
+    provider: ollama
+    model: qwen2.5-coder:7b
+    roles:
+      - edit
+      - apply
+
+  # ⚡ ULTRA FAST AUTOCOMPLETE (HOT PATH)
+  - name: Copilot++ Fast Path
+    provider: ollama
+    model: qwen2.5-coder:1.5b-base
+    roles:
+      - autocomplete
+
+  # 🔍 MEMORY (LIGHT)
+  - name: Repo Memory
+    provider: ollama
+    model: nomic-embed-text:latest
+    roles:
+      - embed

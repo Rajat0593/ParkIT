@@ -30,7 +30,8 @@ const useAuthStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const data = await authService.register(userData);
-      set({ isLoading: false });
+      // Store the OTP ID and registration data for verification
+      set({ otpId: data.otpId, registrationData: data.registrationData, isLoading: false });
       return data;
     } catch (error) {
       set({ 
@@ -41,11 +42,12 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  verifyOTP: async (email, otp) => {
+  verifyOTP: async (otp) => {
     set({ isLoading: true, error: null });
     try {
-      const data = await authService.verifyOTP(email, otp);
-      set({ isLoading: false });
+      const { otpId, registrationData } = get();
+      const data = await authService.verifyOTP(otpId, otp, registrationData);
+      set({ isLoading: false, user: data.user, isAuthenticated: true });
       return data;
     } catch (error) {
       set({ 
@@ -68,12 +70,12 @@ const useAuthStore = create((set, get) => ({
   loadUser: async () => {
     const isAuth = await authService.isAuthenticated();
     if (isAuth) {
-      try {
-        const user = await userService.getProfile();
-        set({ user, isAuthenticated: true });
-      } catch (error) {
-        set({ user: null, isAuthenticated: false });
-      }
+      // For now, since user profile endpoint is not implemented,
+      // we'll just check if token exists and assume user is authenticated
+      // In the future, this should fetch fresh user data from /users/:id
+      set({ isAuthenticated: true });
+    } else {
+      set({ user: null, isAuthenticated: false });
     }
   },
 

@@ -3,16 +3,20 @@ import { NavigationContainer } from '@react-navigation/native';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
 import AppNavigator from './src/navigation/AppNavigator';
+import SplashScreen from './src/screens/SplashScreen';
 import useAuthStore from './src/store/authStore';
 import { authService } from './src/services/api';
 
 export default function App() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
   const { isAuthenticated, loadUser } = useAuthStore();
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    if (!showSplash) {
+      checkAuth();
+    }
+  }, [showSplash]);
 
   const checkAuth = async () => {
     try {
@@ -23,6 +27,14 @@ export default function App() {
       setIsCheckingAuth(false);
     }
   };
+
+  const handleSplashFinish = () => {
+    setShowSplash(false);
+  };
+
+  if (showSplash) {
+    return <SplashScreen onFinish={handleSplashFinish} />;
+  }
 
   if (isCheckingAuth) {
     return (

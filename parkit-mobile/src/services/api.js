@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = 'http://192.168.1.3:3001/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -59,12 +59,26 @@ api.interceptors.response.use(
 
 export const authService = {
   register: async (userData) => {
-    const response = await api.post('/auth/register', userData);
+    // Transform camelCase to snake_case for backend compatibility
+    const transformedData = {
+      first_name: userData.firstName,
+      last_name: userData.lastName,
+      email: userData.email,
+      phone: userData.phone,
+      password: userData.password,
+      user_type: userData.userType,
+    };
+    const response = await api.post('/auth/register', transformedData);
     return response.data;
   },
 
   login: async (credentials) => {
-    const response = await api.post('/auth/login', credentials);
+    // Transform email to email_or_phone for backend compatibility
+    const transformedData = {
+      email_or_phone: credentials.email,
+      password: credentials.password,
+    };
+    const response = await api.post('/auth/login', transformedData);
     if (response.data.accessToken) {
       await SecureStore.setItemAsync('accessToken', response.data.accessToken);
       await SecureStore.setItemAsync('refreshToken', response.data.refreshToken);
@@ -72,8 +86,21 @@ export const authService = {
     return response.data;
   },
 
-  verifyOTP: async (email, otp) => {
-    const response = await api.post('/auth/verify-otp', { email, otp });
+  verifyOTP: async (otpId, otp, registrationData) => {
+    // Transform camelCase to snake_case for backend compatibility
+    const transformedData = {
+      otp_id: otpId,
+      otp,
+      registration_data: {
+        email: registrationData.email,
+        phone: registrationData.phone,
+        password: registrationData.password,
+        first_name: registrationData.firstName,
+        last_name: registrationData.lastName,
+        user_type: registrationData.userType,
+      }
+    };
+    const response = await api.post('/auth/verify-otp', transformedData);
     return response.data;
   },
 

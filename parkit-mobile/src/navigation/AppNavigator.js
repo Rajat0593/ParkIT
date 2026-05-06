@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { IconButton } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import useAuthStore from '../store/authStore';
 
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -113,22 +114,27 @@ function HomeTabs() {
 }
 
 export default function AppNavigator() {
+  const { isAuthenticated } = useAuthStore();
+
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
       }}
     >
-      <Stack.Screen 
-        name="Auth" 
-        component={AuthStack}
-        options={{ title: 'Authentication' }}
-      />
-      <Stack.Screen 
-        name="Main" 
-        component={MainStack}
-        options={{ title: 'Main' }}
-      />
+      {isAuthenticated ? (
+        <Stack.Screen 
+          name="Main" 
+          component={MainStack}
+          options={{ title: 'Main' }}
+        />
+      ) : (
+        <Stack.Screen 
+          name="Auth" 
+          component={AuthStack}
+          options={{ title: 'Authentication' }}
+        />
+      )}
     </Stack.Navigator>
   );
 }

@@ -38,16 +38,28 @@ export default function BookingScreen({ navigation, route }) {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [spaceData, vehiclesData] = await Promise.all([
-        spaceService.getById(spaceId),
-        vehicleService.getAll(),
-      ]);
+      const spaceData = await spaceService.getById(spaceId);
       setSpace(spaceData);
-      setVehicles(vehiclesData);
-      if (vehiclesData.length > 0) {
-        setSelectedVehicle(vehiclesData[0]);
+      
+      // TODO: Implement when backend vehicle API is ready
+      // const vehiclesData = await vehicleService.getAll();
+      // setVehicles(vehiclesData);
+      // Mock vehicles for now
+      const mockVehicles = [
+        { id: 1, name: 'Toyota Camry', licensePlate: 'ABC-123', vehicleType: 'car' },
+        { id: 2, name: 'Honda Civic', licensePlate: 'XYZ-456', vehicleType: 'car' },
+      ];
+      setVehicles(mockVehicles);
+      if (mockVehicles.length > 0) {
+        setSelectedVehicle(mockVehicles[0]);
       }
     } catch (error) {
+      console.error('Error loading data:', error);
+      Alert.alert('Error', 'Failed to load booking data');
+    } finally {
+      setLoading(false);
+    }
+  };
       console.error('Error loading data:', error);
       Alert.alert('Error', 'Failed to load data');
     } finally {
@@ -88,7 +100,12 @@ export default function BookingScreen({ navigation, route }) {
         total_price: calculateTotalPrice(),
       };
 
-      await bookingService.create(bookingData);
+      // TODO: Implement when backend booking API is ready
+      // await bookingService.create(bookingData);
+      
+      // Mock booking creation for now
+      console.log('Mock booking created:', bookingData);
+      
       Alert.alert('Success', 'Booking created successfully!', [
         { text: 'OK', onPress: () => navigation.navigate('Home') },
       ]);
